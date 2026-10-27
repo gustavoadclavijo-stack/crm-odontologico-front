@@ -1,41 +1,48 @@
 <div class="grid-herradura">
-  <div class="cuadrante upper">
+  <div class="arcada-label upper-label" aria-label="Maxilar superior">
+    <span>Maxilar</span>
+    <span>superior</span>
+  </div>
+  <div class="arcada-label lower-label" aria-label="Mandíbula inferior">
+    <span>Mandíbula</span>
+    <span>inferior</span>
+  </div>
+
+  <span class="separador-central" aria-hidden="true"></span>
+
+  <div class="cuadrante upper superior-derecho">
     <app-cuadrante
       orientacion="superior-derecho"
       [dientes]="cuadranteSupDer()"
       [numeroSeleccionado]="numeroSeleccionado()"
-      (dienteClickeado)="dienteClickeado.emit($event)"
-      (caraClickeada)="caraClickeada.emit($event)">
+      (dienteClickeado)="dienteClickeado.emit($event)">
     </app-cuadrante>
   </div>
 
-  <div class="cuadrante upper">
+  <div class="cuadrante upper superior-izquierdo">
     <app-cuadrante
       orientacion="superior-izquierdo"
       [dientes]="cuadranteSupIzq()"
       [numeroSeleccionado]="numeroSeleccionado()"
-      (dienteClickeado)="dienteClickeado.emit($event)"
-      (caraClickeada)="caraClickeada.emit($event)">
+      (dienteClickeado)="dienteClickeado.emit($event)">
     </app-cuadrante>
   </div>
 
-  <div class="cuadrante lower">
+  <div class="cuadrante lower inferior-derecho">
     <app-cuadrante
       orientacion="inferior-derecho"
       [dientes]="cuadranteInfDer()"
       [numeroSeleccionado]="numeroSeleccionado()"
-      (dienteClickeado)="dienteClickeado.emit($event)"
-      (caraClickeada)="caraClickeada.emit($event)">
+      (dienteClickeado)="dienteClickeado.emit($event)">
     </app-cuadrante>
   </div>
 
-  <div class="cuadrante lower">
+  <div class="cuadrante lower inferior-izquierdo">
     <app-cuadrante
       orientacion="inferior-izquierdo"
       [dientes]="cuadranteInfIzq()"
       [numeroSeleccionado]="numeroSeleccionado()"
-      (dienteClickeado)="dienteClickeado.emit($event)"
-      (caraClickeada)="caraClickeada.emit($event)">
+      (dienteClickeado)="dienteClickeado.emit($event)">
     </app-cuadrante>
   </div>
 </div>

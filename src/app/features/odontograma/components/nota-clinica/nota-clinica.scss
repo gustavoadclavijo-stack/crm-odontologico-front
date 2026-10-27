@@ -67,6 +67,30 @@ h2 {
   color: var(--green-700);
 }
 
+.mode-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 0 27px 12px;
+}
+
+.mode-actions .button {
+  min-height: 36px;
+}
+
+.button-secondary.mode-active {
+  border-color: #9dc9ac;
+  background: #eaf5ee;
+  color: #15583f;
+  box-shadow: inset 0 0 0 1px rgba(30, 128, 98, 0.08);
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.68;
+  transform: none;
+}
+
 .clinical-note {
   display: block;
   width: calc(100% - 54px);
@@ -85,6 +109,13 @@ h2 {
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 
+.voice-result {
+  min-height: 142px;
+  resize: none;
+  background: #f8fbf9;
+  cursor: default;
+}
+
 .clinical-note::placeholder {
   color: #9aa9a2;
 }
@@ -92,6 +123,75 @@ h2 {
 .clinical-note:focus {
   border-color: #63a88a;
   box-shadow: 0 0 0 3px rgba(67, 151, 111, 0.12);
+}
+
+.mode-prompt {
+  margin: 0 27px;
+  padding: 18px 16px;
+  border: 1px dashed #d6e5dc;
+  border-radius: 10px;
+  background: #fbfdfc;
+  color: #71847a;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.mode-prompt strong {
+  color: #416a53;
+}
+
+.recording-view {
+  display: grid;
+  min-height: 142px;
+  justify-items: center;
+  align-content: center;
+  gap: 8px;
+  margin: 0 27px;
+  border: 1px solid #f0dada;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fffafa, #fff5f4);
+  color: #a44444;
+}
+
+.recording-view p {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.voice-visualizer {
+  display: flex;
+  height: 46px;
+  align-items: center;
+  gap: 4px;
+}
+
+.voice-visualizer span {
+  width: 4px;
+  height: var(--bar-height);
+  max-height: 42px;
+  border-radius: 999px;
+  background: #d65b5b;
+  animation: voice-wave 750ms ease-in-out infinite alternate;
+}
+
+.voice-visualizer span:nth-child(3n) {
+  animation-delay: 180ms;
+}
+
+.voice-visualizer span:nth-child(3n + 1) {
+  animation-delay: 360ms;
+}
+
+.button-stop {
+  min-height: 34px;
+  border-color: #eccaca;
+  background: #fff;
+  color: #a53d3d;
+}
+
+.button-stop:hover {
+  background: #fff0ef;
 }
 
 .note-footer {
@@ -209,6 +309,73 @@ h2 {
   }
 }
 
+@keyframes voice-wave {
+  to {
+    transform: scaleY(0.35);
+  }
+}
+
+@media (min-width: 981px) {
+  .note-panel {
+    display: flex;
+    min-height: max(580px, calc(100vh - 145px));
+    flex-direction: column;
+  }
+
+  .panel-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+    padding: 21px 20px 15px;
+  }
+
+  .mode-actions {
+    flex-direction: column;
+    margin: 0 20px 12px;
+  }
+
+  .mode-actions .button {
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 42px;
+  }
+
+  .clinical-note {
+    width: calc(100% - 40px);
+    min-height: 180px;
+    flex: 1;
+    margin: 0 20px;
+    resize: none;
+  }
+
+  .mode-prompt,
+  .recording-view {
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+
+  .mode-prompt,
+  .recording-view {
+    flex: 1;
+  }
+
+  .note-footer {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 14px 20px 0;
+  }
+
+  .form-actions,
+  .form-actions .button {
+    width: 100%;
+  }
+
+  .completion-message {
+    margin-right: 20px;
+    margin-left: 20px;
+  }
+}
+
 @media (max-width: 700px) {
   .panel-heading {
     padding: 19px 18px 16px;
@@ -216,6 +383,20 @@ h2 {
 
   .clinical-note {
     width: calc(100% - 36px);
+    margin: 0 18px;
+  }
+
+  .mode-actions,
+  .recording-view {
+    margin-right: 18px;
+    margin-left: 18px;
+  }
+
+  .mode-actions .button {
+    flex: 1 1 100%;
+  }
+
+  .mode-prompt {
     margin: 0 18px;
   }
 

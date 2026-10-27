@@ -1,5 +1,6 @@
-import { Component, input, output } from '@angular/core';
-import { CarasDiente } from '../../models/odontograma.models';
+import { Component, computed, input, output } from '@angular/core';
+
+type FormaDiente = 'incisivo' | 'canino' | 'premolar' | 'molar';
 
 @Component({
   selector: 'app-diente-grafico',
@@ -9,18 +10,26 @@ import { CarasDiente } from '../../models/odontograma.models';
 })
 export class DienteGraficoComponent {
   numeroDiente = input.required<number>();
+  estado = input('Sano');
   seleccionado = input(false);
-  caras = input.required<CarasDiente>();
 
   dienteClickeado = output<number>();
-  caraClickeada = output<{ numero: number; cara: string }>();
+
+  readonly forma = computed<FormaDiente>(() => {
+    const unidad = this.numeroDiente() % 10;
+    if (unidad === 1 || unidad === 2) {
+      return 'incisivo';
+    }
+    if (unidad === 3) {
+      return 'canino';
+    }
+    if (unidad === 4 || unidad === 5) {
+      return 'premolar';
+    }
+    return 'molar';
+  });
 
   onDienteClick(): void {
     this.dienteClickeado.emit(this.numeroDiente());
-  }
-
-  onCaraClick(cara: string, event: MouseEvent): void {
-    event.stopPropagation();
-    this.caraClickeada.emit({ numero: this.numeroDiente(), cara });
   }
 }

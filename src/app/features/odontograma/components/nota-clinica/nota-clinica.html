@@ -3,7 +3,7 @@
     <div>
       <p class="section-kicker">EVOLUCIÓN DEL PACIENTE</p>
       <h2 id="note-title">Descripción clínica</h2>
-      <p class="panel-description">Escribe tus observaciones o dicta la información por voz.</p>
+      <p class="panel-description">Elige cómo registrar la descripción clínica.</p>
     </div>
     <span class="private-label">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5.5 8V6a4.5 4.5 0 0 1 9 0v2m-10 0h11v9h-11V8Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -11,33 +11,73 @@
     </span>
   </div>
 
-  <label class="visually-hidden" for="clinical-note">Descripción clínica del paciente</label>
-  <textarea
-    id="clinical-note"
-    class="clinical-note"
-    [value]="texto()"
-    (input)="onNotaInput($event)"
-    placeholder="Describe los hallazgos, síntomas y observaciones de la consulta…"></textarea>
+  <div class="mode-actions" aria-label="Método de entrada">
+    <button
+      class="button button-secondary"
+      type="button"
+      [class.mode-active]="modoEntrada() === 'escritura'"
+      [attr.aria-pressed]="modoEntrada() === 'escritura'"
+      (click)="seleccionarEscritura()">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 14.8V17h2.2L16.5 5.7l-2.2-2.2L3 14.8Zm11.8-12 2.4 2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Escribir dictado
+    </button>
+    <button
+      class="button button-secondary"
+      type="button"
+      [class.mode-active]="modoEntrada() === 'voz'"
+      [attr.aria-pressed]="modoEntrada() === 'voz'"
+      [disabled]="grabando()"
+      (click)="iniciarDictado()">
+      <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="2.5" width="6" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5m-3 0h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      Realizar dictado de voz
+    </button>
+  </div>
+
+  @if (modoEntrada() === 'escritura') {
+    <label class="visually-hidden" for="clinical-note">Descripción clínica del paciente</label>
+    <textarea
+      id="clinical-note"
+      class="clinical-note"
+      [value]="texto()"
+      (input)="onNotaInput($event)"
+      placeholder="Describe los hallazgos, síntomas y observaciones de la consulta…"></textarea>
+  } @else if (modoEntrada() === 'voz') {
+    @if (grabando()) {
+      <div class="recording-view" role="status" aria-live="polite">
+        <div class="voice-visualizer" aria-hidden="true">
+          @for (bar of [12, 24, 36, 20, 42, 27, 16, 34, 22, 40, 18, 30, 14]; track $index) {
+            <span [style.--bar-height.px]="bar"></span>
+          }
+        </div>
+        <p>Grabando tu dictado…</p>
+        <button class="button button-stop" type="button" (click)="detenerDictado()">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
+          Detener grabación
+        </button>
+      </div>
+    } @else {
+      <label class="visually-hidden" for="clinical-note-result">Resultado del dictado de voz</label>
+      <textarea
+        id="clinical-note-result"
+        class="clinical-note voice-result"
+        [value]="texto()"
+        readonly
+        placeholder="El resultado del dictado aparecerá aquí."></textarea>
+    }
+  } @else {
+    <p class="mode-prompt">Selecciona <strong>Escribir dictado</strong> para redactar la nota o <strong>Realizar dictado de voz</strong> para usar el micrófono.</p>
+  }
 
   <div class="note-footer">
     <p class="voice-status" [class.recording]="grabando()" role="status" aria-live="polite">
       @if (grabando()) {
-        <span class="recording-indicator"></span> Grabando voz… habla con claridad.
+        <span class="recording-indicator"></span> Habla con claridad. El texto se mostrará al detener la grabación.
       } @else {
-        {{ mensajeEstado() || 'El texto dictado se añadirá a la descripción existente.' }}
+        {{ mensajeEstado() || (modoEntrada() === 'voz' ? 'El resultado del dictado no se puede editar.' : '') }}
       }
     </p>
     <div class="form-actions">
-      <button class="button button-secondary" type="button" (click)="alternarGrabacion()" [attr.aria-pressed]="grabando()">
-        @if (grabando()) {
-          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
-          Detener dictado
-        } @else {
-          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="2.5" width="6" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5m-3 0h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-          Grabar voz
-        }
-      </button>
-      <button class="button button-primary" type="button" (click)="finalizarNota()">
+      <button class="button button-primary" type="button" [disabled]="grabando()" (click)="finalizarNota()">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Finalizar consulta
       </button>

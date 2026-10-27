@@ -1,20 +1,20 @@
 import { Component, signal } from '@angular/core';
 import { OdontogramaGridComponent } from '../components/odontograma-grid/odontograma-grid';
-import { DetalleDienteComponent } from '../components/detalle-diente/detalle-diente';
+import { DetallePiezaComponent, CaraDienteId } from '../components/detalle-pieza/detalle-pieza';
 import { NotaClinicaComponent } from '../components/nota-clinica/nota-clinica';
 import { CarasDiente, DienteData } from '../models/odontograma.models';
 
 @Component({
   selector: 'app-odontograma-view',
   standalone: true,
-  imports: [OdontogramaGridComponent, DetalleDienteComponent, NotaClinicaComponent],
+  imports: [OdontogramaGridComponent, DetallePiezaComponent, NotaClinicaComponent],
   templateUrl: './odontograma-view.html',
   styleUrl: './odontograma-view.scss'
 })
 export class OdontogramaViewComponent {
   readonly dientes = signal<DienteData[]>(this.generarBocaCompleta());
   readonly dienteSeleccionado = signal<DienteData | null>(null);
-  readonly caraSeleccionada = signal<string | null>(null);
+  readonly caraSeleccionada = signal<CaraDienteId | null>(null);
   readonly notaClinica = signal('');
   readonly consultaFinalizada = signal(false);
 
@@ -25,10 +25,8 @@ export class OdontogramaViewComponent {
     this.consultaFinalizada.set(false);
   }
 
-  onCaraSeleccionada(evento: { numero: number; cara: string }): void {
-    const diente = this.dientes().find((pieza) => pieza.numero === evento.numero) ?? null;
-    this.dienteSeleccionado.set(diente);
-    this.caraSeleccionada.set(evento.cara);
+  onCaraSeleccionada(cara: CaraDienteId): void {
+    this.caraSeleccionada.set(cara);
     this.consultaFinalizada.set(false);
   }
 

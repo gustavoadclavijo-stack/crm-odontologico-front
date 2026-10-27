@@ -7,10 +7,9 @@
   @for (diente of dientes(); track diente.numero) {
     <app-diente-grafico 
       [numeroDiente]="diente.numero"
-      [caras]="diente.caras"
+      [estado]="diente.estadoGeneral.estado"
       [seleccionado]="numeroSeleccionado() === diente.numero"
-      (dienteClickeado)="dienteClickeado.emit($event)"
-      (caraClickeada)="caraClickeada.emit($event)">
+      (dienteClickeado)="dienteClickeado.emit($event)">
     </app-diente-grafico>
   }
 </div>

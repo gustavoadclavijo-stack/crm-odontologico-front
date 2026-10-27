@@ -1,0 +1,379 @@
+:host {
+  display: block;
+}
+
+.detalle-pieza {
+  margin: 18px 27px 24px;
+  padding: 20px 22px;
+  border: 1px solid #e0ebe5;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #fcfefd, #f7fbf8);
+}
+
+.detalle-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.detalle-kicker {
+  margin: 0 0 5px;
+  color: #56846c;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+h3,
+h4,
+p {
+  margin-top: 0;
+}
+
+h3 {
+  margin-bottom: 4px;
+  color: #1d4938;
+  font-size: 16px;
+}
+
+.detalle-subtitulo,
+.estado-ayuda {
+  margin-bottom: 0;
+  color: #75867e;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.estado-general,
+.estado-cara-badge {
+  padding: 6px 10px;
+  border: 1px solid #d6e9dc;
+  border-radius: 999px;
+  background: #eff8f2;
+  color: #26734e;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.detalle-contenido {
+  display: grid;
+  grid-template-columns: minmax(250px, 1fr) minmax(210px, 0.85fr);
+  align-items: center;
+  gap: 24px;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 17px;
+  border: 1px solid #e7efea;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.vista-diente {
+  display: grid;
+  justify-items: center;
+}
+
+.vista-etiqueta {
+  margin: 0 0 3px;
+  color: #7d8f86;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.caras-svg {
+  display: block;
+  width: min(100%, 220px);
+  overflow: visible;
+  filter: drop-shadow(0 5px 8px rgba(67, 87, 73, 0.1));
+}
+
+.visor-3d {
+  width: min(100%, 330px);
+  height: 310px;
+  overflow: hidden;
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(232, 242, 235, 0.75), transparent 68%),
+    #fff;
+  cursor: grab;
+  touch-action: none;
+}
+
+.visor-3d[hidden] {
+  display: none;
+}
+
+.visor-cargando {
+  display: flex;
+  width: min(100%, 330px);
+  height: 310px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 1px solid #e7efea;
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(232, 242, 235, 0.75), transparent 68%),
+    #fff;
+  color: #708278;
+  font-size: 11px;
+}
+
+.indicador-carga {
+  width: 34px;
+  height: 34px;
+  border: 3px solid #dcebe1;
+  border-top-color: #31815b;
+  border-radius: 50%;
+  animation: girar-carga 800ms linear infinite;
+}
+
+.visor-error {
+  max-width: 330px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #f0dfc3;
+  border-radius: 9px;
+  background: #fffaf0;
+  color: #8a692c;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.visor-3d:active {
+  cursor: grabbing;
+}
+
+.visor-3d canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.controles-3d {
+  display: flex;
+  width: 100%;
+  max-width: 330px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 7px;
+  color: #82928a;
+  font-size: 9px;
+}
+
+.reiniciar-vista,
+.superficies-teclado button {
+  border: 1px solid #dce9e1;
+  border-radius: 7px;
+  background: #f8fbf9;
+  color: #416a53;
+  cursor: pointer;
+  font: inherit;
+}
+
+.reiniciar-vista {
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.superficies-teclado {
+  display: flex;
+  max-width: 330px;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.superficies-teclado button {
+  padding: 4px 7px;
+  font-size: 9px;
+}
+
+.reiniciar-vista:hover,
+.superficies-teclado button:hover,
+.superficies-teclado button.activa {
+  border-color: #9dc9ac;
+  background: #eaf5ee;
+  color: #17664f;
+}
+
+.reiniciar-vista:focus-visible,
+.superficies-teclado button:focus-visible {
+  outline: 3px solid rgba(54, 144, 101, 0.35);
+  outline-offset: 2px;
+}
+
+.sombra-diente {
+  fill: rgba(67, 87, 73, 0.1);
+}
+
+.raiz-perspectiva {
+  fill: #f5f0e5;
+  stroke: #b6a897;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.surco-raiz {
+  fill: none;
+  stroke: #d0c3b2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.diente-contorno {
+  fill: #fffdfa;
+  stroke: #b6a897;
+  stroke-width: 5;
+  stroke-linejoin: round;
+}
+
+.cara-superficie {
+  stroke: #a89885;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  cursor: pointer;
+  transition: filter 140ms ease, stroke 140ms ease;
+}
+
+.cara-superficie:hover,
+.cara-superficie.activa {
+  stroke: #24744d;
+  stroke-width: 4;
+  filter: brightness(0.96);
+}
+
+.cara-superficie:focus-visible {
+  outline: none;
+  stroke: #17664f;
+  stroke-width: 5;
+}
+
+.surco {
+  fill: none;
+  pointer-events: none;
+  stroke: #c9bba9;
+  stroke-linecap: round;
+  stroke-width: 2;
+}
+
+.orientacion {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  gap: 12px;
+  color: #8a9a91;
+  font-size: 9px;
+}
+
+.estado-cara {
+  min-height: 190px;
+  padding: 20px;
+  border: 1px solid #e7efea;
+  border-radius: 10px;
+  background: #fbfdfc;
+}
+
+.estado-cara h4 {
+  margin-bottom: 12px;
+  color: #294d3d;
+  font-size: 15px;
+}
+
+.estado-cara-badge {
+  display: inline-flex;
+}
+
+.estado-cara-badge.caries,
+.estado-cara-badge.fracturado {
+  border-color: #f0c3b9;
+  background: #fff1ed;
+  color: #a33f32;
+}
+
+.estado-cara-badge.restaurado,
+.estado-cara-badge.corona,
+.estado-cara-badge.sellante {
+  border-color: #e8d39e;
+  background: #fff8e4;
+  color: #8b6a19;
+}
+
+.estado-ayuda {
+  margin-top: 11px;
+}
+
+.estado-vacio-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 14px;
+  place-items: center;
+  border-radius: 10px;
+  background: #eaf5ee;
+  color: #438262;
+  font-size: 22px;
+}
+
+.leyenda-cara {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 13px;
+  margin-top: 24px;
+  color: #76877e;
+  font-size: 9px;
+}
+
+.leyenda-cara span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 9px;
+  height: 9px;
+  border: 1px solid #c9d6ce;
+  border-radius: 3px;
+  background: #fffdf5;
+}
+
+.swatch.alterado {
+  border-color: #e8d39e;
+  background: #fff0cf;
+}
+
+@keyframes girar-carga {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 700px) {
+  .detalle-pieza {
+    margin: 14px 14px 18px;
+    padding: 16px;
+  }
+
+  .detalle-contenido {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 12px;
+  }
+
+  .estado-cara {
+    min-height: auto;
+    padding: 16px;
+  }
+
+  .visor-3d,
+  .visor-cargando {
+    height: 270px;
+  }
+}

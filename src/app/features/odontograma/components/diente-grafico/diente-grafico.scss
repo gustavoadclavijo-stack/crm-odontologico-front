@@ -7,72 +7,87 @@
   display: flex;
   width: 100%;
   min-width: 0;
+  min-height: 116px;
   flex-direction: column;
   align-items: center;
-  padding: 4px 2px 5px;
+  justify-content: center;
+  gap: 3px;
+  padding: 3px 1px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 8px;
   background: transparent;
-  color: #405d51;
+  color: #355749;
   cursor: pointer;
-  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+  transition: background 160ms ease, border-color 160ms ease, filter 160ms ease;
 }
 
-.diente-container:hover {
-  border-color: #d7e9de;
-  background: #f1f8f4;
+.diente-container:hover,
+.diente-container.is-selected {
+  border-color: #b4d8c0;
+  background: rgba(245, 252, 247, 0.94);
 }
 
 .diente-container:focus-visible {
-  outline: 3px solid rgba(54, 144, 101, 0.35);
+  outline: 3px solid rgba(54, 144, 101, 0.4);
   outline-offset: 2px;
 }
 
-.diente-container.is-selected {
-  border-color: #9fcdb2;
-  background: #e9f5ed;
-  color: #17664f;
-}
-
 .diente-numero {
-  margin-bottom: 4px;
-  font-size: clamp(9px, 1vw, 12px);
-  font-weight: 700;
+  color: #234b3b;
+  font-size: clamp(8px, 0.85vw, 10px);
+  font-weight: 600;
   line-height: 1;
 }
 
 .diente-svg {
   display: block;
   width: min(100%, 48px);
-  height: auto;
+  height: 88px;
   overflow: visible;
-  filter: drop-shadow(0 2px 2px rgba(33, 72, 54, 0.12));
+  filter: drop-shadow(0 1px 1px rgba(65, 27, 33, 0.15));
 }
 
-.diente-svg polygon {
-  stroke: #729081;
+.raiz,
+.corona {
+  fill: #fffef9;
+  stroke: #b7a99a;
+  stroke-width: 2.4;
+  stroke-linejoin: round;
+  transition: fill 150ms ease, stroke 150ms ease;
+}
+
+.raiz {
+  fill: #f7f3e8;
+}
+
+.brillo {
+  fill: none;
+  stroke: #fff;
+  stroke-linecap: round;
   stroke-width: 3;
-  vector-effect: non-scaling-stroke;
-  transition: opacity 150ms ease, fill 200ms ease, stroke 150ms ease;
+  opacity: 0.9;
 }
 
-.diente-svg polygon:hover {
-  stroke: #277552;
-  opacity: 0.78;
-  cursor: crosshair;
+.upper-tooth .diente-svg {
+  transform: rotate(180deg);
 }
 
-.is-selected .diente-svg polygon {
-  stroke: #2e7957;
+.is-selected .corona {
+  stroke: #38835c;
+}
+
+.has-finding .corona {
+  fill: #fff0cf;
 }
 
 @media (max-width: 700px) {
   .diente-container {
-    padding: 3px 1px;
+    min-height: 102px;
+    gap: 2px;
   }
 
   .diente-svg {
-    width: 34px;
-    max-width: 100%;
+    width: min(100%, 40px);
+    height: 78px;
   }
 }

@@ -21,5 +21,4 @@ export class CuadranteComponent {
   numeroSeleccionado = input<number | null>(null);
 
   dienteClickeado = output<number>();
-  caraClickeada = output<{numero: number, cara: string}>();
 }

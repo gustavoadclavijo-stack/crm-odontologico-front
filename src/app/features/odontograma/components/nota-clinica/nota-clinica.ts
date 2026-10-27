@@ -47,8 +47,10 @@ export class NotaClinicaComponent implements OnDestroy {
   protected readonly texto = signal('');
   protected readonly grabando = signal(false);
   protected readonly mensajeEstado = signal('');
+  protected readonly modoEntrada = signal<'escritura' | 'voz' | null>(null);
 
   private reconocimiento: SpeechRecognitionLike | null = null;
+  private textoReconocido = '';
 
   onNotaInput(evento: Event): void {
     const nota = (evento.target as HTMLTextAreaElement).value;
@@ -56,11 +58,22 @@ export class NotaClinicaComponent implements OnDestroy {
     this.notaCambiada.emit(nota);
   }
 
-  alternarGrabacion(): void {
-    if (this.grabando()) {
-      this.reconocimiento?.stop();
-      return;
-    }
+  seleccionarEscritura(): void {
+    this.detenerReconocimiento();
+    this.modoEntrada.set('escritura');
+    this.textoReconocido = '';
+    this.texto.set('');
+    this.mensajeEstado.set('');
+    this.notaCambiada.emit('');
+  }
+
+  iniciarDictado(): void {
+    this.detenerReconocimiento();
+    this.modoEntrada.set('voz');
+    this.textoReconocido = '';
+    this.texto.set('');
+    this.mensajeEstado.set('');
+    this.notaCambiada.emit('');
 
     const speechWindow = window as SpeechRecognitionWindow;
     const SpeechRecognitionConstructor =
@@ -84,11 +97,7 @@ export class NotaClinicaComponent implements OnDestroy {
         .join(' ');
 
       if (texto) {
-        const notaActual = this.texto().trimEnd();
-        const nota = notaActual ? `${notaActual} ${texto}` : texto;
-        this.texto.set(nota);
-        this.notaCambiada.emit(nota);
-        this.mensajeEstado.set('');
+        this.textoReconocido = `${this.textoReconocido} ${texto}`.trim();
       }
     };
     reconocimiento.onerror = (evento) => {
@@ -98,6 +107,8 @@ export class NotaClinicaComponent implements OnDestroy {
     reconocimiento.onend = () => {
       this.grabando.set(false);
       this.reconocimiento = null;
+      this.texto.set(this.textoReconocido);
+      this.notaCambiada.emit(this.textoReconocido);
     };
 
     this.reconocimiento = reconocimiento;
@@ -113,15 +124,27 @@ export class NotaClinicaComponent implements OnDestroy {
     }
   }
 
+  detenerDictado(): void {
+    this.reconocimiento?.stop();
+  }
+
   finalizarNota(): void {
-    if (this.grabando()) {
-      this.reconocimiento?.stop();
-    }
+    this.detenerReconocimiento();
     this.finalizar.emit(this.texto());
   }
 
   ngOnDestroy(): void {
-    this.reconocimiento?.stop();
+    this.detenerReconocimiento();
+  }
+
+  private detenerReconocimiento(): void {
+    if (!this.reconocimiento) return;
+
+    this.reconocimiento.onend = null;
+    this.reconocimiento.onerror = null;
+    this.reconocimiento.stop();
+    this.reconocimiento = null;
+    this.grabando.set(false);
   }
 
   private mensajeErrorVoz(error: string): string {

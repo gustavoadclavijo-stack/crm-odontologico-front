@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { DienteGraficoComponent } from './diente-grafico';
-import { CarasDiente } from '../../models/odontograma.models';
 
 describe('DienteGraficoComponent', () => {
   let component: DienteGraficoComponent;
@@ -15,24 +14,18 @@ describe('DienteGraficoComponent', () => {
 
     fixture = TestBed.createComponent(DienteGraficoComponent);
     component = fixture.componentInstance;
-    const caraSana = (etiquetaVisual: string) => ({
-      colorHex: '#ffffff',
-      etiquetaVisual,
-      estado: 'Sano' as const
-    });
-    const caras: CarasDiente = {
-      vestibular: caraSana('Vestibular'),
-      palatino_lingual: caraSana('Palatino/Lingual'),
-      mesial: caraSana('Mesial'),
-      distal: caraSana('Distal'),
-      oclusal_incisal: caraSana('Oclusal/Incisal')
-    };
     fixture.componentRef.setInput('numeroDiente', 11);
-    fixture.componentRef.setInput('caras', caras);
     await fixture.whenStable();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should render a tooth silhouette without interactive surface zones', () => {
+    fixture.detectChanges();
+
+    expect(fixture.nativeElement.querySelector('.corona')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[role="button"]')).toBeNull();
   });
 });
