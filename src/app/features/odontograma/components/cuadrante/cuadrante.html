@@ -8,6 +8,7 @@
     <app-diente-grafico 
       [numeroDiente]="diente.numero"
       [estado]="diente.estadoGeneral.estado"
+      [diente]="diente"
       [seleccionado]="numeroSeleccionado() === diente.numero"
       (dienteClickeado)="dienteClickeado.emit($event)">
     </app-diente-grafico>

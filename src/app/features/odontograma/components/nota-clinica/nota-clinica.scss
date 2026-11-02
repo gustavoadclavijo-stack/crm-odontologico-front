@@ -293,6 +293,17 @@ h2 {
   font-size: 11px;
 }
 
+.error-message {
+  margin: 13px 27px 0;
+  padding: 10px 12px;
+  border: 1px solid #f2c6c2;
+  border-radius: 8px;
+  background: #fff3f2;
+  color: #9e2f28;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -370,7 +381,8 @@ h2 {
     width: 100%;
   }
 
-  .completion-message {
+  .completion-message,
+  .error-message {
     margin-right: 20px;
     margin-left: 20px;
   }

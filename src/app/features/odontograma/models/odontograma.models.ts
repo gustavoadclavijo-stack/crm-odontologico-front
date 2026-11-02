@@ -17,6 +17,9 @@ export type EstadoClinico =
   | 'Sellante'
   | 'Presente'; // Estado por defecto general
 
+export type GrupoDental = 'ANTERIOR' | 'POSTERIOR';
+export type ArcadaDental = 'SUPERIOR' | 'INFERIOR';
+
 /**
  * Representa el estado individual de una de las 5 caras del diente
  */
@@ -51,8 +54,22 @@ export interface EstadoGeneral {
 export interface DienteData {
   numero: number;
   nombreColoquial: string;
+  cuadrante?: number;
+  grupoDental?: GrupoDental | string;
   estadoGeneral: EstadoGeneral;
   caras: CarasDiente;
+}
+
+/**
+ * Metadatos del catálogo oficial FDI de 32 dientes permanentes
+ */
+export interface DienteFdiMetadata {
+  numero: number;
+  cuadrante: number;
+  posicion: number;
+  nombreColoquial: string;
+  arcada: ArcadaDental | string;
+  grupo: GrupoDental | string;
 }
 
 // ==========================================
@@ -65,14 +82,16 @@ export interface DienteData {
  */
 export interface OdontogramaUpdateResponse {
   odontogramaId: string;
-  diente: DienteData;
+  dientes: DienteData[];
+  diente?: DienteData; // Fallback opcional por si algún mock envía singular
 }
 
 /**
  * Contrato de Salida: JSON que envía el Frontend hacia el Backend
- * cuando el micrófono termina de capturar la frase.
+ * cuando el micrófono termina de capturar la frase o se envía el texto.
  */
 export interface VoiceCaptureRequest {
   odontogramaId: string;
   textoCapturado: string;
+  prompt?: string | null;
 }

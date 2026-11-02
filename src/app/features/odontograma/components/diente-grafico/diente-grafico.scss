@@ -4,6 +4,7 @@
 }
 
 .diente-container {
+  position: relative;
   display: flex;
   width: 100%;
   min-width: 0;
@@ -53,7 +54,7 @@
   stroke: #b7a99a;
   stroke-width: 2.4;
   stroke-linejoin: round;
-  transition: fill 150ms ease, stroke 150ms ease;
+  transition: fill 150ms ease, stroke 150ms ease, opacity 150ms ease;
 }
 
 .raiz {
@@ -74,10 +75,43 @@
 
 .is-selected .corona {
   stroke: #38835c;
+  stroke-width: 3;
 }
 
 .has-finding .corona {
-  fill: #fff0cf;
+  fill: color-mix(in srgb, var(--finding-color, #fff0cf) 38%, #fffef9);
+  stroke: var(--finding-color, #d97706);
+  stroke-width: 2.8;
+}
+
+.is-absent .raiz,
+.is-absent .corona {
+  opacity: 0.42;
+  stroke-dasharray: 4 3;
+}
+
+.marca-ausente {
+  fill: none;
+  stroke: var(--finding-color, #64748b);
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.hallazgos-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 6px;
+}
+
+.hallazgo-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
 }
 
 @media (max-width: 700px) {

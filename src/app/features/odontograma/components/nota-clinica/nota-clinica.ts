@@ -41,6 +41,10 @@ interface SpeechRecognitionWindow extends Window {
 })
 export class NotaClinicaComponent implements OnDestroy {
   readonly finalizada = input(false);
+  readonly procesando = input(false);
+  readonly errorServidor = input<string | null>(null);
+  readonly resumenActualizacion = input<string | null>(null);
+
   readonly notaCambiada = output<string>();
   readonly finalizar = output<string>();
 

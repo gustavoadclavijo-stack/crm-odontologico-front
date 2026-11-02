@@ -1,10 +1,12 @@
 <button
   class="diente-container"
   [class.is-selected]="seleccionado()"
-  [class.has-finding]="estado() !== 'Sano'"
+  [class.has-finding]="tieneHallazgo()"
+  [class.is-absent]="esAusenteOExtraido()"
   [class.upper-tooth]="numeroDiente() < 30"
   [class.lower-tooth]="numeroDiente() >= 30"
-  [attr.aria-label]="'Seleccionar diente ' + numeroDiente() + ', estado ' + estado()"
+  [style.--finding-color]="colorHallazgo() ?? '#fff0cf'"
+  [attr.aria-label]="'Seleccionar diente ' + numeroDiente() + ', estado ' + etiquetaEstado()"
   [attr.aria-pressed]="seleccionado()"
   type="button"
   (click)="onDienteClick()">
@@ -35,7 +37,18 @@
         <path class="brillo" d="M25 25c5-8 13-9 20-7" />
       }
     }
+    @if (esAusenteOExtraido()) {
+      <path class="marca-ausente" d="M22 18L78 54M78 18L22 54" />
+    }
   </svg>
+
+  @if (carasConHallazgo().length > 0 && !esAusenteOExtraido()) {
+    <span class="hallazgos-dots" aria-hidden="true">
+      @for (cara of carasConHallazgo(); track cara.id) {
+        <i class="hallazgo-dot" [style.background-color]="cara.colorHex" [title]="cara.etiqueta + ': ' + cara.estado"></i>
+      }
+    </span>
+  }
 
   @if (numeroDiente() >= 30) {
     <span class="diente-numero">{{ numeroDiente() }}</span>

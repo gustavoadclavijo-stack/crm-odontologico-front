@@ -30,7 +30,10 @@
         <p class="eyebrow">CONSULTA · REGISTRO CLÍNICO</p>
         <h1 id="page-title">Registro odontológico</h1>
       </div>
-      <div class="record-badge"><span></span> Consulta en curso</div>
+      <div class="record-badge">
+        <span></span>
+        {{ procesandoDictado() ? 'Procesando dictado con IA…' : 'Consulta en curso' }}
+      </div>
     </section>
 
     <div class="workspace-grid">
@@ -54,6 +57,10 @@
           <div class="chart-legend" aria-label="Leyenda">
             <span><i class="legend-dot healthy"></i>Sano</span>
             <span><i class="legend-dot selected"></i>Seleccionado</span>
+            <span><i class="legend-dot caries" style="background: #EF4444; border-color: #EF4444"></i>Caries</span>
+            <span><i class="legend-dot restaurado" style="background: #3B82F6; border-color: #3B82F6"></i>Restaurado</span>
+            <span><i class="legend-dot fracturado" style="background: #F97316; border-color: #F97316"></i>Fracturado</span>
+            <span><i class="legend-dot corona" style="background: #EAB308; border-color: #EAB308"></i>Corona</span>
             <span class="legend-help">Haz clic en una pieza para explorar sus caras</span>
           </div>
         </div>
@@ -76,6 +83,9 @@
         <app-nota-clinica
           id="nota-clinica"
           [finalizada]="consultaFinalizada()"
+          [procesando]="procesandoDictado()"
+          [errorServidor]="errorDictado()"
+          [resumenActualizacion]="resumenActualizacion()"
           (notaCambiada)="onNotaCambiada($event)"
           (finalizar)="finalizarConsulta($event)">
         </app-nota-clinica>

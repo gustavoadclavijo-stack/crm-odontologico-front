@@ -17,6 +17,7 @@
       type="button"
       [class.mode-active]="modoEntrada() === 'escritura'"
       [attr.aria-pressed]="modoEntrada() === 'escritura'"
+      [disabled]="procesando()"
       (click)="seleccionarEscritura()">
       <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 14.8V17h2.2L16.5 5.7l-2.2-2.2L3 14.8Zm11.8-12 2.4 2.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       Escribir dictado
@@ -26,7 +27,7 @@
       type="button"
       [class.mode-active]="modoEntrada() === 'voz'"
       [attr.aria-pressed]="modoEntrada() === 'voz'"
-      [disabled]="grabando()"
+      [disabled]="grabando() || procesando()"
       (click)="iniciarDictado()">
       <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="2.5" width="6" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5m-3 0h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       Realizar dictado de voz
@@ -39,6 +40,7 @@
       id="clinical-note"
       class="clinical-note"
       [value]="texto()"
+      [disabled]="procesando()"
       (input)="onNotaInput($event)"
       placeholder="Describe los hallazgos, síntomas y observaciones de la consulta…"></textarea>
   } @else if (modoEntrada() === 'voz') {
@@ -72,21 +74,29 @@
     <p class="voice-status" [class.recording]="grabando()" role="status" aria-live="polite">
       @if (grabando()) {
         <span class="recording-indicator"></span> Habla con claridad. El texto se mostrará al detener la grabación.
+      } @else if (procesando()) {
+        Analizando hallazgos con IA y actualizando odontograma…
       } @else {
         {{ mensajeEstado() || (modoEntrada() === 'voz' ? 'El resultado del dictado no se puede editar.' : '') }}
       }
     </p>
     <div class="form-actions">
-      <button class="button button-primary" type="button" [disabled]="grabando()" (click)="finalizarNota()">
+      <button class="button button-primary" type="button" [disabled]="grabando() || procesando()" (click)="finalizarNota()">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Finalizar consulta
+        {{ procesando() ? 'Procesando dictado…' : 'Finalizar consulta' }}
       </button>
     </div>
   </div>
 
+  @if (errorServidor(); as mensajeError) {
+    <p class="error-message" role="alert">
+      {{ mensajeError }}
+    </p>
+  }
+
   @if (finalizada()) {
     <p class="completion-message" role="status">
-      Registro preparado. Aún no se ha enviado ni guardado en un servidor.
+      {{ resumenActualizacion() || 'Odontograma actualizado exitosamente desde el servidor.' }}
     </p>
   }
 </section>

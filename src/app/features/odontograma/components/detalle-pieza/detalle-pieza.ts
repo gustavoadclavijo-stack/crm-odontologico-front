@@ -37,11 +37,39 @@ export class DetallePiezaComponent implements AfterViewInit, OnDestroy {
     return id ? this.diente().caras[id] : null;
   });
 
+  readonly tituloPieza = computed(() => {
+    const actual = this.diente();
+    const numStr = String(actual.numero);
+    if (actual.nombreColoquial.includes(numStr)) {
+      return actual.nombreColoquial;
+    }
+    return `${actual.nombreColoquial} (Diente ${numStr})`;
+  });
+
+  readonly resumenCaras = computed(() => {
+    const caras = this.diente().caras;
+    const ids: CaraDienteId[] = [
+      'vestibular',
+      'palatino_lingual',
+      'mesial',
+      'distal',
+      'oclusal_incisal'
+    ];
+    return ids.map((id) => ({
+      id,
+      etiquetaVisual: caras[id].etiquetaVisual,
+      estado: caras[id].estado,
+      colorHex: this.colorBadgeCara(id),
+      tieneHallazgo: !this.esEstadoSanoOPresente(caras[id].estado)
+    }));
+  });
+
   @ViewChild('visor3d') private visor3d?: ElementRef<HTMLDivElement>;
 
   private readonly platformId = inject(PLATFORM_ID);
   private readonly aparienciaEffect = effect(() => {
-    const numero = this.diente().numero;
+    const pieza = this.diente();
+    const numero = pieza.numero;
     this.caraSeleccionada();
     if (this.three && this.toothGroup && this.numeroModelo() !== numero) {
       this.limpiarModelo();
@@ -148,6 +176,34 @@ export class DetallePiezaComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  colorCaraSvg(face: CaraDienteId): string {
+    const cara = this.diente().caras[face];
+    const coloresNeutros = new Set(['#fff', '#ffffff', '#fffdf5', '#fffefa']);
+    if (cara?.colorHex && !coloresNeutros.has(cara.colorHex.toLowerCase())) {
+      return cara.colorHex;
+    }
+    if (!cara || this.esEstadoSanoOPresente(cara.estado)) {
+      const estadoGeneral = this.diente().estadoGeneral;
+      if (estadoGeneral && !this.esEstadoSanoOPresente(estadoGeneral.estado) && estadoGeneral.colorHex) {
+        return estadoGeneral.colorHex;
+      }
+      return '#fffdf5';
+    }
+    return cara.colorHex || '#fff0cf';
+  }
+
+  colorBadgeCara(face: CaraDienteId): string | null {
+    const cara = this.diente().caras[face];
+    const coloresNeutros = new Set(['#fff', '#ffffff', '#fffdf5', '#fffefa']);
+    if (cara?.colorHex && !coloresNeutros.has(cara.colorHex.toLowerCase())) {
+      return cara.colorHex;
+    }
+    if (!cara || this.esEstadoSanoOPresente(cara.estado)) {
+      return null;
+    }
+    return cara.colorHex;
+  }
+
   iniciarRotacion(event: PointerEvent): void {
     this.pointerStart = {
       x: event.clientX,
@@ -191,6 +247,12 @@ export class DetallePiezaComponent implements AfterViewInit, OnDestroy {
     this.cameraTheta = 0.45;
     this.cameraPhi = 0.95;
     this.actualizarCamara();
+  }
+
+  private esEstadoSanoOPresente(estado: string | null | undefined): boolean {
+    if (!estado) return true;
+    const norm = estado.trim().toLowerCase();
+    return norm === 'sano' || norm === 'presente';
   }
 
   private crearDiente3d(): void {
@@ -427,11 +489,26 @@ export class DetallePiezaComponent implements AfterViewInit, OnDestroy {
   }
 
   private colorSuperficie(face: CaraDienteId, three: typeof import('three')): THREE.Color {
-    const clinicalColor = this.diente().caras[face].colorHex?.toLowerCase();
-    const coloresSanos = new Set(['#fff', '#ffffff', '#fffdf5', '#fffefa']);
-    const color = new three.Color(
-      clinicalColor && !coloresSanos.has(clinicalColor) ? clinicalColor : '#e9ddc6'
-    );
+    const cara = this.diente().caras[face];
+    const esSana = this.esEstadoSanoOPresente(cara?.estado);
+    const clinicalColor = cara?.colorHex?.toLowerCase();
+    const coloresNeutros = new Set(['#fff', '#ffffff', '#fffdf5', '#fffefa']);
+
+    let hexElegido = '#e9ddc6';
+    if (clinicalColor && !coloresNeutros.has(clinicalColor)) {
+      hexElegido = clinicalColor;
+    } else if (esSana) {
+      const estadoGeneral = this.diente().estadoGeneral;
+      if (
+        estadoGeneral &&
+        estadoGeneral.colorHex &&
+        !coloresNeutros.has(estadoGeneral.colorHex.toLowerCase())
+      ) {
+        hexElegido = estadoGeneral.colorHex;
+      }
+    }
+
+    const color = new three.Color(hexElegido);
     if (this.caraSeleccionada() === face) {
       color.lerp(new three.Color('#55a978'), 0.4);
     }
