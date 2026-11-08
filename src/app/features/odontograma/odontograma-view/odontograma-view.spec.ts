@@ -31,6 +31,32 @@ describe('OdontogramaViewComponent', () => {
     expect(compiled.querySelector('.note-rail app-nota-clinica')).toBeTruthy();
   });
 
+  it('should show the odontogram by default and open the patient form only from navigation', () => {
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    expect(compiled.querySelector('app-paciente-form')).toBeNull();
+    expect(compiled.querySelector('.workspace-grid #odontograma')).toBeTruthy();
+
+    const patientLink = [...compiled.querySelectorAll('nav button')].find((button) =>
+      button.textContent?.includes('Paciente')
+    );
+    patientLink?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('app-paciente-form')).toBeTruthy();
+    expect(compiled.querySelector('.workspace-grid #odontograma')).toBeNull();
+
+    const odontogramLink = [...compiled.querySelectorAll('nav button')].find((button) =>
+      button.textContent?.includes('Odontograma')
+    );
+    odontogramLink?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    fixture.detectChanges();
+
+    expect(compiled.querySelector('app-paciente-form')).toBeNull();
+    expect(compiled.querySelector('.workspace-grid #odontograma')).toBeTruthy();
+  });
+
   it('should render 32 teeth and show the interactive detail when a tooth is selected', () => {
     const compiled = fixture.nativeElement as HTMLElement;
 

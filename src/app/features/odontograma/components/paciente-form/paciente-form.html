@@ -1,0 +1,78 @@
+<section id="datos-paciente" class="panel patient-panel" aria-labelledby="patient-title">
+  <div class="panel-heading">
+    <div>
+      <p class="section-kicker">INFORMACIÓN DEL PACIENTE</p>
+      <h2 id="patient-title">Datos del paciente</h2>
+      <p class="panel-description">Completa la ficha manualmente o dicta toda la información en una sola grabación.</p>
+    </div>
+    <span class="private-label">Ficha de consulta</span>
+  </div>
+
+  <div class="patient-voice">
+    <div class="voice-instructions">
+      <strong>Dictado completo del paciente</strong>
+      <span>Menciona con claridad los datos que conozcas; la IA los organizará en los campos.</span>
+    </div>
+    @if (grabando()) {
+      <button class="button button-stop" type="button" (click)="detenerDictado()">
+        <span class="recording-indicator"></span>
+        Detener grabación
+      </button>
+    } @else {
+      <button
+        class="button button-secondary"
+        type="button"
+        [disabled]="iniciandoGrabacion() || transcribiendo()"
+        (click)="iniciarDictado()">
+        @if (iniciandoGrabacion()) {
+          Solicitando micrófono…
+        } @else if (transcribiendo()) {
+          Procesando dictado…
+        } @else {
+          Dictar información del paciente
+        }
+      </button>
+    }
+    @if (grabando()) {
+      <span class="voice-progress" role="status">Grabando toda la información…</span>
+    } @else if (transcribiendo()) {
+      <span class="voice-progress" role="status">Transcribiendo y organizando los datos con Groq Cloud…</span>
+    } @else if (mensajeEstado()) {
+      <span class="voice-message" role="status" aria-live="polite">{{ mensajeEstado() }}</span>
+    }
+  </div>
+
+  @if (transcripcion()) {
+    <label class="patient-transcript" for="patient-transcript">
+      <span>Transcripción completa para revisar</span>
+      <textarea id="patient-transcript" [value]="transcripcion()" readonly rows="3"></textarea>
+    </label>
+  }
+
+  <div class="patient-fields">
+    @for (campo of campos; track campo.id) {
+      <label class="patient-field" [class.patient-field-wide]="campo.multiline">
+        <span>{{ campo.label }}</span>
+        @if (campo.multiline) {
+          <textarea
+            [id]="'patient-' + campo.id"
+            [value]="paciente()[campo.id]"
+            rows="2"
+            (input)="actualizarCampo(campo.id, $event)"></textarea>
+        } @else {
+          <input
+            [id]="'patient-' + campo.id"
+            [type]="campo.id === 'correo' ? 'email' : 'text'"
+            [attr.inputmode]="campo.id === 'edad' || campo.id === 'telefono' ? 'text' : null"
+            [autocomplete]="campo.id === 'nombres' ? 'given-name' : campo.id === 'apellidos' ? 'family-name' : 'off'"
+            [value]="paciente()[campo.id]"
+            (input)="actualizarCampo(campo.id, $event)" />
+        }
+      </label>
+    }
+  </div>
+  <p class="patient-privacy">
+    El audio se envía a Groq Cloud para su transcripción. La ficha solo permanece en esta sesión
+    del navegador; no se guarda en una base de datos.
+  </p>
+</section>

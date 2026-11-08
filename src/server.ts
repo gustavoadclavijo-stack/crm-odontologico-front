@@ -6,10 +6,14 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
+import { registerJavaApiProxy } from './server/java-api-proxy';
+import { registerSpeechTranscriptionRoute } from './server/speech-transcription';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
+registerSpeechTranscriptionRoute(app);
+registerJavaApiProxy(app);
 const angularApp = new AngularNodeAppEngine({
   allowedHosts: ['localhost', '127.0.0.1', '*.app.github.dev'],
   trustProxyHeaders: ['x-forwarded-host', 'x-forwarded-port', 'x-forwarded-proto'],

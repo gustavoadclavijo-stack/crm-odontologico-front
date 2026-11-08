@@ -3,6 +3,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { OdontogramaGridComponent } from '../components/odontograma-grid/odontograma-grid';
 import { DetallePiezaComponent, CaraDienteId } from '../components/detalle-pieza/detalle-pieza';
 import { NotaClinicaComponent } from '../components/nota-clinica/nota-clinica';
+import { PacienteFormComponent } from '../components/paciente-form/paciente-form';
+import { crearPacienteVacio, DatosPaciente } from '../models/paciente.models';
 import {
   CarasDiente,
   DienteData,
@@ -13,14 +15,16 @@ import { OdontogramaApiService } from '../services/odontograma-api.service';
 @Component({
   selector: 'app-odontograma-view',
   standalone: true,
-  imports: [OdontogramaGridComponent, DetallePiezaComponent, NotaClinicaComponent],
+  imports: [OdontogramaGridComponent, DetallePiezaComponent, NotaClinicaComponent, PacienteFormComponent],
   templateUrl: './odontograma-view.html',
   styleUrl: './odontograma-view.scss'
 })
 export class OdontogramaViewComponent {
   private readonly odontogramaApi = inject(OdontogramaApiService);
 
+  readonly vistaActual = signal<'odontograma' | 'paciente'>('odontograma');
   readonly odontogramaId = signal('odont-001');
+  readonly datosPaciente = signal<DatosPaciente>(crearPacienteVacio());
   readonly dientes = signal<DienteData[]>(this.generarBocaCompleta());
   readonly numeroSeleccionado = signal<number | null>(null);
   readonly dienteSeleccionado = computed<DienteData | null>(() => {
@@ -36,6 +40,19 @@ export class OdontogramaViewComponent {
   readonly procesandoDictado = signal(false);
   readonly errorDictado = signal<string | null>(null);
   readonly resumenActualizacion = signal<string | null>(null);
+
+  mostrarOdontograma(): void {
+    this.vistaActual.set('odontograma');
+  }
+
+  mostrarPaciente(): void {
+    this.vistaActual.set('paciente');
+  }
+
+  irANotaClinica(): void {
+    this.mostrarOdontograma();
+    setTimeout(() => document.getElementById('nota-clinica')?.scrollIntoView({ behavior: 'smooth' }));
+  }
 
   onDienteSeleccionado(numero: number): void {
     this.numeroSeleccionado.set(numero);

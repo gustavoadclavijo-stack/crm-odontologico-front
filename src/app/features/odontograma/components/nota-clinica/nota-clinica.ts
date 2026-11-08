@@ -1,37 +1,6 @@
-import { Component, OnDestroy, input, output, signal } from '@angular/core';
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-}
-
-interface SpeechRecognitionResult extends ArrayLike<SpeechRecognitionAlternative> {
-  isFinal: boolean;
-}
-
-interface SpeechRecognitionEvent {
-  resultIndex: number;
-  results: ArrayLike<SpeechRecognitionResult>;
-}
-
-interface SpeechRecognitionErrorEvent {
-  error: string;
-}
-
-interface SpeechRecognitionLike {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-  start(): void;
-  stop(): void;
-}
-
-interface SpeechRecognitionWindow extends Window {
-  SpeechRecognition?: new () => SpeechRecognitionLike;
-  webkitSpeechRecognition?: new () => SpeechRecognitionLike;
-}
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnDestroy, inject, input, output, signal } from '@angular/core';
+import { SpeechTranscriptionService } from '../../services/speech-transcription.service';
 
 @Component({
   selector: 'app-nota-clinica',
@@ -40,6 +9,8 @@ interface SpeechRecognitionWindow extends Window {
   styleUrl: './nota-clinica.scss'
 })
 export class NotaClinicaComponent implements OnDestroy {
+  private readonly speechTranscription = inject(SpeechTranscriptionService);
+
   readonly finalizada = input(false);
   readonly procesando = input(false);
   readonly errorServidor = input<string | null>(null);
@@ -50,11 +21,15 @@ export class NotaClinicaComponent implements OnDestroy {
 
   protected readonly texto = signal('');
   protected readonly grabando = signal(false);
+  protected readonly iniciandoGrabacion = signal(false);
+  protected readonly transcribiendo = signal(false);
   protected readonly mensajeEstado = signal('');
   protected readonly modoEntrada = signal<'escritura' | 'voz' | null>(null);
 
-  private reconocimiento: SpeechRecognitionLike | null = null;
-  private textoReconocido = '';
+  private grabadora: MediaRecorder | null = null;
+  private flujoMicrofono: MediaStream | null = null;
+  private fragmentosAudio: Blob[] = [];
+  private intentoCaptura = 0;
 
   onNotaInput(evento: Event): void {
     const nota = (evento.target as HTMLTextAreaElement).value;
@@ -63,114 +38,134 @@ export class NotaClinicaComponent implements OnDestroy {
   }
 
   seleccionarEscritura(): void {
-    this.detenerReconocimiento();
+    this.cancelarCaptura();
     this.modoEntrada.set('escritura');
-    this.textoReconocido = '';
     this.texto.set('');
     this.mensajeEstado.set('');
     this.notaCambiada.emit('');
   }
 
-  iniciarDictado(): void {
-    this.detenerReconocimiento();
+  async iniciarDictado(): Promise<void> {
+    this.cancelarCaptura();
     this.modoEntrada.set('voz');
-    this.textoReconocido = '';
     this.texto.set('');
     this.mensajeEstado.set('');
     this.notaCambiada.emit('');
 
-    const speechWindow = window as SpeechRecognitionWindow;
-    const SpeechRecognitionConstructor =
-      speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
-
-    if (!SpeechRecognitionConstructor) {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
       this.mensajeEstado.set('El dictado por voz no está disponible en este navegador.');
       return;
     }
 
-    const reconocimiento = new SpeechRecognitionConstructor();
-    reconocimiento.lang = 'es-CO';
-    reconocimiento.continuous = true;
-    reconocimiento.interimResults = false;
-    reconocimiento.onresult = (evento) => {
-      const texto = Array.from(evento.results)
-        .slice(evento.resultIndex)
-        .filter((resultado) => resultado.isFinal)
-        .map((resultado) => resultado[0]?.transcript.trim() ?? '')
-        .filter(Boolean)
-        .join(' ');
-
-      if (texto) {
-        this.textoReconocido = `${this.textoReconocido} ${texto}`.trim();
-      }
-    };
-    reconocimiento.onerror = (evento) => {
-      this.grabando.set(false);
-      this.mensajeEstado.set(this.mensajeErrorVoz(evento.error));
-    };
-    reconocimiento.onend = () => {
-      this.grabando.set(false);
-      this.reconocimiento = null;
-      this.texto.set(this.textoReconocido);
-      this.notaCambiada.emit(this.textoReconocido);
-    };
-
-    this.reconocimiento = reconocimiento;
-    this.mensajeEstado.set('');
-    this.grabando.set(true);
+    const intento = this.intentoCaptura;
+    this.iniciandoGrabacion.set(true);
 
     try {
-      reconocimiento.start();
+      const flujo = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (intento !== this.intentoCaptura) {
+        flujo.getTracks().forEach((pista) => pista.stop());
+        return;
+      }
+
+      this.flujoMicrofono = flujo;
+      const mimeType = this.tipoAudioCompatible();
+      const grabadora = new MediaRecorder(flujo, mimeType ? { mimeType } : undefined);
+      this.grabadora = grabadora;
+      this.fragmentosAudio = [];
+
+      grabadora.ondataavailable = (evento) => {
+        if (evento.data.size > 0) this.fragmentosAudio.push(evento.data);
+      };
+      grabadora.onerror = () => {
+        grabadora.onstop = null;
+        this.mensajeEstado.set('Ocurrió un error al grabar el audio. Inténtalo de nuevo.');
+        this.liberarMicrofono();
+        this.grabando.set(false);
+      };
+      grabadora.onstop = () => {
+        const audio = new Blob(this.fragmentosAudio, {
+          type: grabadora.mimeType || 'audio/webm'
+        });
+        this.fragmentosAudio = [];
+        this.liberarMicrofono();
+        this.grabando.set(false);
+        this.transcribirAudio(audio, intento);
+      };
+
+      grabadora.start();
+      this.iniciandoGrabacion.set(false);
+      this.grabando.set(true);
     } catch (error) {
+      if (intento !== this.intentoCaptura) return;
+      this.liberarMicrofono();
+      this.iniciandoGrabacion.set(false);
       this.grabando.set(false);
-      this.reconocimiento = null;
       this.mensajeEstado.set(this.mensajeErrorInicio(error));
     }
   }
 
   detenerDictado(): void {
-    this.reconocimiento?.stop();
+    if (this.grabadora?.state === 'recording') {
+      this.grabadora.stop();
+    }
   }
 
   finalizarNota(): void {
-    this.detenerReconocimiento();
+    this.cancelarCaptura();
     this.finalizar.emit(this.texto());
   }
 
   ngOnDestroy(): void {
-    this.detenerReconocimiento();
+    this.cancelarCaptura();
   }
 
-  private detenerReconocimiento(): void {
-    if (!this.reconocimiento) return;
-
-    this.reconocimiento.onend = null;
-    this.reconocimiento.onerror = null;
-    this.reconocimiento.stop();
-    this.reconocimiento = null;
+  private cancelarCaptura(): void {
+    this.intentoCaptura++;
+    if (this.grabadora && this.grabadora.state !== 'inactive') {
+      this.grabadora.onstop = null;
+      this.grabadora.stop();
+    }
+    this.liberarMicrofono();
+    this.grabadora = null;
+    this.fragmentosAudio = [];
     this.grabando.set(false);
+    this.iniciandoGrabacion.set(false);
+    this.transcribiendo.set(false);
   }
 
-  private mensajeErrorVoz(error: string): string {
-    if (error === 'not-allowed' || error === 'service-not-allowed') {
-      return 'No se concedió permiso para usar el micrófono.';
+  private liberarMicrofono(): void {
+    this.flujoMicrofono?.getTracks().forEach((pista) => pista.stop());
+    this.flujoMicrofono = null;
+    this.grabadora = null;
+  }
+
+  private tipoAudioCompatible(): string | null {
+    const formatos = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'];
+    return formatos.find((formato) => MediaRecorder.isTypeSupported(formato)) ?? null;
+  }
+
+  private transcribirAudio(audio: Blob, intento: number): void {
+    if (intento !== this.intentoCaptura) return;
+    if (!audio.size) {
+      this.mensajeEstado.set('No se capturó audio. Puedes volver a intentarlo.');
+      return;
     }
-    if (error === 'no-speech') {
-      return 'No se detectó voz. Puedes volver a intentarlo.';
-    }
-    if (error === 'audio-capture') {
-      return 'No se encontró un micrófono disponible.';
-    }
-    if (error === 'network') {
-      return 'El servicio de reconocimiento no está disponible. Revisa tu conexión.';
-    }
-    if (error === 'language-not-supported') {
-      return 'El navegador no admite reconocimiento de voz en español de Colombia.';
-    }
-    if (error === 'aborted') {
-      return 'El dictado se detuvo antes de completar el reconocimiento.';
-    }
-    return 'No fue posible completar el dictado. Inténtalo de nuevo.';
+
+    this.transcribiendo.set(true);
+    this.mensajeEstado.set('');
+    this.speechTranscription.transcribir(audio).subscribe({
+      next: (texto) => {
+        if (intento !== this.intentoCaptura) return;
+        this.texto.set(texto);
+        this.notaCambiada.emit(texto);
+        this.transcribiendo.set(false);
+      },
+      error: (error: unknown) => {
+        if (intento !== this.intentoCaptura) return;
+        this.transcribiendo.set(false);
+        this.mensajeEstado.set(this.mensajeErrorTranscripcion(error));
+      }
+    });
   }
 
   private mensajeErrorInicio(error: unknown): string {
@@ -178,13 +173,24 @@ export class NotaClinicaComponent implements OnDestroy {
       if (error.name === 'NotAllowedError' || error.name === 'SecurityError') {
         return 'No se concedió permiso para usar el micrófono. Verifica también que estés en una conexión segura (HTTPS o localhost).';
       }
-      if (error.name === 'InvalidStateError') {
-        return 'El reconocimiento de voz ya está en curso. Detén el dictado e inténtalo de nuevo.';
-      }
-      if (error.name === 'NotSupportedError') {
-        return 'Este navegador no admite el reconocimiento de voz requerido.';
+      if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+        return 'No se encontró un micrófono disponible.';
       }
     }
     return 'No se pudo iniciar el dictado. Verifica el permiso del micrófono e inténtalo de nuevo.';
+  }
+
+  private mensajeErrorTranscripcion(error: unknown): string {
+    if (error instanceof HttpErrorResponse) {
+      const mensaje = error.error?.message;
+      if (typeof mensaje === 'string' && mensaje.trim()) return mensaje;
+      if (error.status === 0) {
+        return 'No se pudo conectar con el servicio de transcripción. Revisa tu conexión.';
+      }
+      if (error.status === 413) {
+        return 'El audio supera el límite de tamaño permitido. Graba un dictado más corto.';
+      }
+    }
+    return 'No fue posible transcribir el audio. Inténtalo de nuevo.';
   }
 }

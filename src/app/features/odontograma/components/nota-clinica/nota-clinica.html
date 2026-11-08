@@ -27,7 +27,7 @@
       type="button"
       [class.mode-active]="modoEntrada() === 'voz'"
       [attr.aria-pressed]="modoEntrada() === 'voz'"
-      [disabled]="grabando() || procesando()"
+      [disabled]="grabando() || iniciandoGrabacion() || transcribiendo() || procesando()"
       (click)="iniciarDictado()">
       <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="2.5" width="6" height="10" rx="3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v2.5m-3 0h6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       Realizar dictado de voz
@@ -44,18 +44,27 @@
       (input)="onNotaInput($event)"
       placeholder="Describe los hallazgos, síntomas y observaciones de la consulta…"></textarea>
   } @else if (modoEntrada() === 'voz') {
-    @if (grabando()) {
+    <p class="transcription-privacy">
+      El audio se enviará a Groq Cloud para transcribirlo.
+    </p>
+    @if (grabando() || iniciandoGrabacion() || transcribiendo()) {
       <div class="recording-view" role="status" aria-live="polite">
         <div class="voice-visualizer" aria-hidden="true">
           @for (bar of [12, 24, 36, 20, 42, 27, 16, 34, 22, 40, 18, 30, 14]; track $index) {
             <span [style.--bar-height.px]="bar"></span>
           }
         </div>
-        <p>Grabando tu dictado…</p>
-        <button class="button button-stop" type="button" (click)="detenerDictado()">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
-          Detener grabación
-        </button>
+        @if (iniciandoGrabacion()) {
+          <p>Solicitando acceso al micrófono…</p>
+        } @else if (transcribiendo()) {
+          <p>Transcribiendo audio…</p>
+        } @else {
+          <p>Grabando tu dictado…</p>
+          <button class="button button-stop" type="button" (click)="detenerDictado()">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="5" y="5" width="10" height="10" rx="2" fill="currentColor"/></svg>
+            Detener grabación
+          </button>
+        }
       </div>
     } @else {
       <label class="visually-hidden" for="clinical-note-result">Resultado del dictado de voz</label>
@@ -73,7 +82,11 @@
   <div class="note-footer">
     <p class="voice-status" [class.recording]="grabando()" role="status" aria-live="polite">
       @if (grabando()) {
-        <span class="recording-indicator"></span> Habla con claridad. El texto se mostrará al detener la grabación.
+        <span class="recording-indicator"></span> Habla con claridad. Se transcribirá al detener la grabación.
+      } @else if (iniciandoGrabacion()) {
+        Permite el acceso al micrófono para comenzar.
+      } @else if (transcribiendo()) {
+        Enviando el audio para obtener la transcripción…
       } @else if (procesando()) {
         Analizando hallazgos con IA y actualizando odontograma…
       } @else {
@@ -81,7 +94,7 @@
       }
     </p>
     <div class="form-actions">
-      <button class="button button-primary" type="button" [disabled]="grabando() || procesando()" (click)="finalizarNota()">
+      <button class="button button-primary" type="button" [disabled]="grabando() || iniciandoGrabacion() || transcribiendo() || procesando()" (click)="finalizarNota()">
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         {{ procesando() ? 'Procesando dictado…' : 'Finalizar consulta' }}
       </button>

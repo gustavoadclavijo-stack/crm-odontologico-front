@@ -75,9 +75,13 @@
   gap: 6px;
   padding: 7px 3px;
   border-radius: 11px;
+  border: 0;
+  background: transparent;
   color: #708179;
+  cursor: pointer;
   font-size: 9px;
   font-weight: 600;
+  font-family: inherit;
   text-decoration: none;
   text-align: center;
   transition: color 160ms ease, background 160ms ease;

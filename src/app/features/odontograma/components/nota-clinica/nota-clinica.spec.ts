@@ -1,13 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { NotaClinicaComponent } from './nota-clinica';
+import { SpeechTranscriptionService } from '../../services/speech-transcription.service';
 
 describe('NotaClinicaComponent', () => {
   let component: NotaClinicaComponent;
   let fixture: ComponentFixture<NotaClinicaComponent>;
+  let transcription: { transcribir: ReturnType<typeof vi.fn> };
 
   beforeEach(async () => {
+    transcription = { transcribir: vi.fn(() => of('Sensibilidad dental en pieza 16')) };
     await TestBed.configureTestingModule({
-      imports: [NotaClinicaComponent]
+      imports: [NotaClinicaComponent],
+      providers: [{ provide: SpeechTranscriptionService, useValue: transcription }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(NotaClinicaComponent);
@@ -65,55 +70,73 @@ describe('NotaClinicaComponent', () => {
     expect(onFinalizar).toHaveBeenCalledWith('Dolor en pieza 16');
   });
 
-  it('should show a recording graphic and then a read-only voice result', () => {
-    let recognition: FakeSpeechRecognition | undefined;
-    class MockSpeechRecognition extends FakeSpeechRecognition {
-      constructor() {
-        super();
-        recognition = this;
+  it('should transcribe the complete recording and show its read-only result', async () => {
+    const stopTrack = vi.fn();
+    const stream = { getTracks: () => [{ stop: stopTrack }] } as unknown as MediaStream;
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: { getUserMedia: vi.fn().mockResolvedValue(stream) }
+    });
+
+    let recorder: FakeMediaRecorder | undefined;
+    class MockMediaRecorder extends FakeMediaRecorder {
+      constructor(stream: MediaStream, options?: MediaRecorderOptions) {
+        super(stream, options);
+        recorder = this;
       }
     }
-
-    Object.defineProperty(window, 'SpeechRecognition', {
+    Object.defineProperty(window, 'MediaRecorder', {
       configurable: true,
-      value: MockSpeechRecognition
+      value: MockMediaRecorder
     });
 
     fixture.detectChanges();
-    component.iniciarDictado();
+    await component.iniciarDictado();
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.voice-visualizer')).toBeTruthy();
     expect(fixture.nativeElement.querySelector('textarea')).toBeNull();
 
-    recognition?.onresult?.({
-      resultIndex: 0,
-      results: [{ isFinal: true, 0: { transcript: 'Sensibilidad dental' }, length: 1 }]
-    });
     component.detenerDictado();
-    recognition?.onend?.();
     fixture.detectChanges();
 
     const result = fixture.nativeElement.querySelector('#clinical-note-result') as HTMLTextAreaElement;
-    expect(result.value).toBe('Sensibilidad dental');
+    expect(result.value).toBe('Sensibilidad dental en pieza 16');
     expect(result.readOnly).toBe(true);
+    expect(recorder?.start).toHaveBeenCalled();
+    expect(transcription.transcribir).toHaveBeenCalledWith(expect.any(Blob));
+    expect(stopTrack).toHaveBeenCalled();
 
-    delete (window as Window & { SpeechRecognition?: unknown }).SpeechRecognition;
+    Reflect.deleteProperty(window, 'MediaRecorder');
+    Reflect.deleteProperty(navigator, 'mediaDevices');
   });
 });
 
-class FakeSpeechRecognition {
-  lang = '';
-  continuous = false;
-  interimResults = false;
-  onresult: ((event: {
-    resultIndex: number;
-    results: ArrayLike<{ isFinal: boolean; 0: { transcript: string }; length: number }>;
-  }) => void) | null = null;
-  onerror: ((event: { error: string }) => void) | null = null;
-  onend: (() => void) | null = null;
+class FakeMediaRecorder {
+  static isTypeSupported(): boolean {
+    return true;
+  }
 
-  start(): void {}
+  state: RecordingState = 'inactive';
+  mimeType = 'audio/webm;codecs=opus';
+  ondataavailable: ((event: BlobEvent) => void) | null = null;
+  onerror: ((event: Event) => void) | null = null;
+  onstop: ((event: Event) => void) | null = null;
 
-  stop(): void {}
+  constructor(
+    _stream: MediaStream,
+    _options?: MediaRecorderOptions
+  ) {}
+
+  start = vi.fn(() => {
+    this.state = 'recording';
+  });
+
+  stop(): void {
+    this.state = 'inactive';
+    this.ondataavailable?.({
+      data: new Blob(['complete recorded audio'], { type: 'audio/webm' })
+    } as BlobEvent);
+    this.onstop?.(new Event('stop'));
+  }
 }

@@ -8,14 +8,18 @@
     </a>
 
     <nav class="side-nav" aria-label="Navegación principal">
-      <a class="side-nav-link active" href="#odontograma" aria-current="page">
+      <button class="side-nav-link" type="button" [class.active]="vistaActual() === 'odontograma'" [attr.aria-current]="vistaActual() === 'odontograma' ? 'page' : null" (click)="mostrarOdontograma()">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7.5 3.5c-2.6 0-4 2.1-3.5 5.3l1.5 9c.4 2.4 2.2 3.4 3.3 1.1l2-4.1c.5-1 1.4-1 1.9 0l2 4.1c1.1 2.3 2.9 1.3 3.3-1.1l1.5-9c.5-3.2-.9-5.3-3.5-5.3-1.8 0-2.5 1-4.2 1s-2.5-1-4.3-1Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
         <span>Odontograma</span>
-      </a>
-      <a class="side-nav-link" href="#nota-clinica">
+      </button>
+      <button class="side-nav-link" type="button" (click)="irANotaClinica()">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 3.75h7l4 4v12.5H7a2 2 0 0 1-2-2v-12.5a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 4v4h4M8.5 12h7m-7 3h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         <span>Nota clínica</span>
-      </a>
+      </button>
+      <button class="side-nav-link" type="button" [class.active]="vistaActual() === 'paciente'" [attr.aria-current]="vistaActual() === 'paciente' ? 'page' : null" (click)="mostrarPaciente()">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-7 8a7 7 0 0 1 14 0M18 8h4m-2-2v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Paciente</span>
+      </button>
     </nav>
 
     <div class="sidebar-profile" aria-label="Doctor, Consultorio">
@@ -27,70 +31,81 @@
   <main id="inicio" class="page-shell">
     <section class="page-heading" aria-labelledby="page-title">
       <div>
-        <p class="eyebrow">CONSULTA · REGISTRO CLÍNICO</p>
-        <h1 id="page-title">Registro odontológico</h1>
+        @if (vistaActual() === 'paciente') {
+          <p class="eyebrow">CONSULTA · REGISTRO DEL PACIENTE</p>
+          <h1 id="page-title">Datos del paciente</h1>
+        } @else {
+          <p class="eyebrow">CONSULTA · REGISTRO CLÍNICO</p>
+          <h1 id="page-title">Registro odontológico</h1>
+        }
       </div>
-      <div class="record-badge">
-        <span></span>
-        {{ procesandoDictado() ? 'Procesando dictado con IA…' : 'Consulta en curso' }}
-      </div>
+      @if (vistaActual() === 'odontograma') {
+        <div class="record-badge">
+          <span></span>
+          {{ procesandoDictado() ? 'Procesando dictado con IA…' : 'Consulta en curso' }}
+        </div>
+      }
     </section>
 
-    <div class="workspace-grid">
-      <section id="odontograma" class="panel chart-panel" aria-labelledby="chart-title">
-        <div class="panel-heading">
-          <div>
-            <p class="section-kicker">EXAMEN DENTAL</p>
-            <h2 id="chart-title">Odontograma</h2>
-            <p class="panel-description">Selecciona una pieza dental para ver sus superficies.</p>
+    @if (vistaActual() === 'paciente') {
+      <app-paciente-form [(paciente)]="datosPaciente" />
+    } @else {
+      <div class="workspace-grid">
+        <section id="odontograma" class="panel chart-panel" aria-labelledby="chart-title">
+          <div class="panel-heading">
+            <div>
+              <p class="section-kicker">EXAMEN DENTAL</p>
+              <h2 id="chart-title">Odontograma</h2>
+              <p class="panel-description">Selecciona una pieza dental para ver sus superficies.</p>
+            </div>
+            <span class="tooth-count">32 piezas</span>
           </div>
-          <span class="tooth-count">32 piezas</span>
-        </div>
 
-        <div class="chart-content">
-          <app-odontograma-grid
-            [dientes]="dientes()"
-            [numeroSeleccionado]="dienteSeleccionado()?.numero ?? null"
-            (dienteClickeado)="onDienteSeleccionado($event)">
-          </app-odontograma-grid>
+          <div class="chart-content">
+            <app-odontograma-grid
+              [dientes]="dientes()"
+              [numeroSeleccionado]="dienteSeleccionado()?.numero ?? null"
+              (dienteClickeado)="onDienteSeleccionado($event)">
+            </app-odontograma-grid>
 
-          <div class="chart-legend" aria-label="Leyenda">
-            <span><i class="legend-dot healthy"></i>Sano</span>
-            <span><i class="legend-dot selected"></i>Seleccionado</span>
-            <span><i class="legend-dot caries" style="background: #EF4444; border-color: #EF4444"></i>Caries</span>
-            <span><i class="legend-dot restaurado" style="background: #3B82F6; border-color: #3B82F6"></i>Restaurado</span>
-            <span><i class="legend-dot fracturado" style="background: #F97316; border-color: #F97316"></i>Fracturado</span>
-            <span><i class="legend-dot corona" style="background: #EAB308; border-color: #EAB308"></i>Corona</span>
-            <span class="legend-help">Haz clic en una pieza para explorar sus caras</span>
+            <div class="chart-legend" aria-label="Leyenda">
+              <span><i class="legend-dot healthy"></i>Sano</span>
+              <span><i class="legend-dot selected"></i>Seleccionado</span>
+              <span><i class="legend-dot caries" style="background: #EF4444; border-color: #EF4444"></i>Caries</span>
+              <span><i class="legend-dot restaurado" style="background: #3B82F6; border-color: #3B82F6"></i>Restaurado</span>
+              <span><i class="legend-dot fracturado" style="background: #F97316; border-color: #F97316"></i>Fracturado</span>
+              <span><i class="legend-dot corona" style="background: #EAB308; border-color: #EAB308"></i>Corona</span>
+              <span class="legend-help">Haz clic en una pieza para explorar sus caras</span>
+            </div>
           </div>
-        </div>
 
-        @if (dienteSeleccionado(); as pieza) {
-          <app-detalle-pieza
-            [diente]="pieza"
-            [caraSeleccionada]="caraSeleccionada()"
-            (caraClickeada)="onCaraSeleccionada($event)">
-          </app-detalle-pieza>
-        } @else {
-          <div class="select-tooth-hint">
-            <span aria-hidden="true">⌖</span>
-            <p>Selecciona un diente para explorar sus cinco superficies.</p>
-          </div>
-        }
-      </section>
+          @if (dienteSeleccionado(); as pieza) {
+            <app-detalle-pieza
+              [diente]="pieza"
+              [caraSeleccionada]="caraSeleccionada()"
+              (caraClickeada)="onCaraSeleccionada($event)">
+            </app-detalle-pieza>
+          } @else {
+            <div class="select-tooth-hint">
+              <span aria-hidden="true">⌖</span>
+              <p>Selecciona un diente para explorar sus cinco superficies.</p>
+            </div>
+          }
+        </section>
 
-      <aside class="note-rail" aria-label="Descripción clínica">
-        <app-nota-clinica
-          id="nota-clinica"
-          [finalizada]="consultaFinalizada()"
-          [procesando]="procesandoDictado()"
-          [errorServidor]="errorDictado()"
-          [resumenActualizacion]="resumenActualizacion()"
-          (notaCambiada)="onNotaCambiada($event)"
-          (finalizar)="finalizarConsulta($event)">
-        </app-nota-clinica>
-      </aside>
-    </div>
+        <aside class="note-rail" aria-label="Descripción clínica">
+          <app-nota-clinica
+            id="nota-clinica"
+            [finalizada]="consultaFinalizada()"
+            [procesando]="procesandoDictado()"
+            [errorServidor]="errorDictado()"
+            [resumenActualizacion]="resumenActualizacion()"
+            (notaCambiada)="onNotaCambiada($event)"
+            (finalizar)="finalizarConsulta($event)">
+          </app-nota-clinica>
+        </aside>
+      </div>
+    }
 
     <footer class="page-footer">Sonrisa Clínica <span>·</span> Herramienta de apoyo para el registro odontológico</footer>
   </main>
